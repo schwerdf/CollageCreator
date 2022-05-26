@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -59,7 +60,11 @@ func createCollageImageMagickScript(imageLayout ImageLayout) string {
 		info := imageLayout.ImageInfoOf(img)
 		dimensions := info.DimensionsOf()
 		scaling := imageLayout.ScalingOf(img)
-		rv += fmt.Sprintf("\"$IM_CONVERT_BIN\" %s", shellScriptDefang(imageLayout.ImageInfoOf(img).FileName()))
+		imageFile, err := filepath.Abs(imageLayout.ImageInfoOf(img).FileName())
+		if err != nil {
+			imageFile = imageLayout.ImageInfoOf(img).FileName()
+		}
+		rv += fmt.Sprintf("\"$IM_CONVERT_BIN\" %s", shellScriptDefang(imageFile))
 		// -scale %dx%d! -crop %dx%d+%d+%d - | \"$IM_COMPOSITE_BIN\" -compose atop -geometry +%d+%d - \"$OUTFILE\" \"$OUTFILE\"\n", toInt(dimensions.X()), toInt(dimensions.Y()))
 		if scaling.HasSize() {
 			dimensions = scaling.Scale(dimensions)

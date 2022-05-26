@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 // Produces output in the form of an SVG file that links to all the input images.
@@ -53,13 +54,17 @@ func createCollageSVG(imageLayout ImageLayout) string {
 		if scaling.HasSize() {
 			dimensions = scaling.Scale(dimensions)
 		}
+		imagePath, errI := filepath.Abs(imageLayout.ImageInfoOf(img).FileName())
+		if errI != nil {
+			imagePath = imageLayout.ImageInfoOf(img).FileName()
+		}
 		if cropping.HasOffset() {
 			croppedDimensions := cropping.Crop(dimensions)
 			offset := cropping.Offset(dimensions)
 			clipPaths += fmt.Sprintf("  <clipPath id=\"clip%d\"><rect x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"/></clipPath>\n", i, position.X(), -(ySize - position.Y()), croppedDimensions.X(), croppedDimensions.Y())
-			imageTags += fmt.Sprintf("  <image x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"  clip-path=\"url(#clip%d)\" xlink:href=\"file:///%s\"/>\n", position.X()-offset.X(), -(ySize-position.Y())+offset.Y(), dimensions.X(), dimensions.Y(), i, imageLayout.ImageInfoOf(img).FileName())
+			imageTags += fmt.Sprintf("  <image x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\"  clip-path=\"url(#clip%d)\" xlink:href=\"file:///%s\"/>\n", position.X()-offset.X(), -(ySize-position.Y())+offset.Y(), dimensions.X(), dimensions.Y(), i, imagePath)
 		} else {
-			imageTags += fmt.Sprintf("  <image x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" xlink:href=\"file:///%s\"/>\n", position.X(), -(ySize - position.Y()), dimensions.X(), dimensions.Y(), imageLayout.ImageInfoOf(img).FileName())
+			imageTags += fmt.Sprintf("  <image x=\"%f\" y=\"%f\" width=\"%f\" height=\"%f\" xlink:href=\"file:///%s\"/>\n", position.X(), -(ySize - position.Y()), dimensions.X(), dimensions.Y(), imagePath)
 		}
 
 		i++
